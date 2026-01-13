@@ -130,6 +130,18 @@ export default function HomePage() {
             </button>
           </div>
         </div>
+
+        {/* First-time user hint */}
+        <div className="mt-10 flex justify-center">
+        <p className="text-lg text-slate-500">
+            New here?{' '}
+            <span className="font-semibold text-[--color-primary]">
+            Please start with Face Registration.
+            </span>
+        </p>
+        </div>
+
+
       </main>
 
       <footer className="w-full bg-white border-t border-slate-200 py-8">

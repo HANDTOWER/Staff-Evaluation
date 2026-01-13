@@ -1,14 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
 
-export default function CameraInput({ onCapture }) {
+export default function CameraInput({ onCapture, fullBody = false }) {
+  // Keep refs to the video element and active media stream.
   const videoRef = useRef(null)
   const streamRef = useRef(null)
 
+  // UI/stream state.
   const [enabled, setEnabled] = useState(false)
   const [starting, setStarting] = useState(false)
   const [error, setError] = useState('')
   const [ready, setReady] = useState(false)
 
+  // Stop the camera and release the hardware.
   const stop = () => {
     const stream = streamRef.current
     if (stream) {
@@ -26,13 +29,26 @@ export default function CameraInput({ onCapture }) {
     setStarting(true)
 
     try {
+      // Request webcam access.
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+        video: fullBody
+          ? {
+              // Full-body friendly (portrait preference)
+              width: { ideal: 720 },
+              height: { ideal: 1280 },
+              aspectRatio: { ideal: 9 / 16 },
+              facingMode: 'user',
+            }
+          : {
+              // Original behavior
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
+            },
         audio: false,
       })
 
       streamRef.current = stream
-      setEnabled(true) // video ?Œë” ?¸ë¦¬ê±?
+      setEnabled(true)
     } catch (e) {
       console.error(e)
       setError('Camera permission denied or not available.')
@@ -42,7 +58,7 @@ export default function CameraInput({ onCapture }) {
     }
   }
 
-  // enabled ????stream ë¶™ì´ê³?play
+  // Attach stream to the video element once enabled.
   useEffect(() => {
     const video = videoRef.current
     const stream = streamRef.current
@@ -61,31 +77,62 @@ export default function CameraInput({ onCapture }) {
     tryPlay()
   }, [enabled])
 
+  // Capture current frame (fullBody => crop to 9:16).
   const capture = () => {
     const video = videoRef.current
     if (!video || !enabled || !ready) return
 
-    const w = video.videoWidth || 1280
-    const h = video.videoHeight || 720
+    const vw = video.videoWidth || (fullBody ? 720 : 1280)
+    const vh = video.videoHeight || (fullBody ? 1280 : 720)
 
     const canvas = document.createElement('canvas')
-    canvas.width = w
-    canvas.height = h
     const ctx = canvas.getContext('2d')
-    ctx.drawImage(video, 0, 0, w, h)
+    if (!ctx) return
+
+    if (fullBody) {
+      // Crop to portrait 9:16 from the center (no stretching)
+      const targetRatio = 9 / 16
+
+      // Use the full height; compute width by ratio and center-crop horizontally.
+      const cropH = vh
+      const cropW = cropH * targetRatio
+
+      // If camera gives narrower than desired, fallback to using full width and crop vertically.
+      if (cropW <= vw) {
+        const sx = (vw - cropW) / 2
+        canvas.width = Math.round(cropW)
+        canvas.height = Math.round(cropH)
+        ctx.drawImage(video, sx, 0, cropW, cropH, 0, 0, cropW, cropH)
+      } else {
+        // fallback: use full width, crop height to match ratio
+        const cropW2 = vw
+        const cropH2 = cropW2 / targetRatio
+        const sy = Math.max(0, (vh - cropH2) / 2)
+        canvas.width = Math.round(cropW2)
+        canvas.height = Math.round(cropH2)
+        ctx.drawImage(video, 0, sy, cropW2, cropH2, 0, 0, cropW2, cropH2)
+      }
+    } else {
+      // Original: capture full frame
+      canvas.width = vw
+      canvas.height = vh
+      ctx.drawImage(video, 0, 0, vw, vh)
+    }
 
     const dataUrl = canvas.toDataURL('image/jpeg', 0.92)
     onCapture?.(dataUrl)
   }
 
   useEffect(() => {
+    // Cleanup on unmount.
     return () => stop()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (
+    // Full-screen container for the camera UI inside the parent frame.
     <div className="absolute inset-0">
-      {/* video */}
+      {/* Live video surface */}
       {enabled && (
         <video
           ref={videoRef}
@@ -94,7 +141,6 @@ export default function CameraInput({ onCapture }) {
           muted
           className="absolute inset-0 w-full h-full object-cover"
           onLoadedMetadata={(e) => {
-            // metadata ?¤ì–´?¤ë©´ ready ì²˜ë¦¬ + play ?œë²ˆ ??
             setReady(true)
             try {
               e.currentTarget.play()
@@ -104,12 +150,25 @@ export default function CameraInput({ onCapture }) {
         />
       )}
 
-      {/* guide overlay */}
+      {/* Guide overlay */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div className="w-[35%] h-[70%] border-2 border-white/30 rounded-[50%] border-dashed" />
+        {fullBody ? (
+          // Full-body guide (head-to-feet)
+          <div className="absolute inset-6 border-2 border-white/30 rounded-xl border-dashed">
+            <div className="absolute top-2 left-1/2 -translate-x-1/2 text-xs text-white/70">
+              Head
+            </div>
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-xs text-white/70">
+              Feet
+            </div>
+          </div>
+        ) : (
+          // Original ellipse guide
+          <div className="w-[35%] h-[70%] border-2 border-white/30 rounded-[50%] border-dashed" />
+        )}
       </div>
 
-      {/* placeholder */}
+      {/* Placeholder while camera is off */}
       {!enabled && (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-white/85 bg-slate-900/40 backdrop-blur-[1px]">
           <span className="material-symbols-outlined text-5xl">
@@ -122,7 +181,7 @@ export default function CameraInput({ onCapture }) {
         </div>
       )}
 
-      {/* status badge */}
+      {/* Status badge */}
       <div className="absolute top-3 right-3 z-20 bg-black/50 backdrop-blur-sm text-white text-xs px-2 py-1 rounded flex items-center gap-2">
         <span
           className={`w-2 h-2 rounded-full ${
@@ -132,14 +191,14 @@ export default function CameraInput({ onCapture }) {
         {enabled ? (ready ? 'Live' : 'Starting...') : 'Idle'}
       </div>
 
-      {/* error */}
+      {/* Error banner */}
       {error && (
         <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-30 px-3 py-2 rounded-lg bg-red-600/90 text-white text-xs font-semibold">
           {error}
         </div>
       )}
 
-      {/* controls (inside frame) */}
+      {/* Controls (inside frame) */}
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2">
         {!enabled ? (
           <button
@@ -205,4 +264,3 @@ export default function CameraInput({ onCapture }) {
     </div>
   )
 }
-

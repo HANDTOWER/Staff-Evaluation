@@ -1,13 +1,14 @@
-import { useMemo, useState } from 'react'
+﻿import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import CameraInput from '../components/CameraInput.jsx'
 import ImageUpload from '../components/ImageUpload.jsx'
 import AppHeader from '../components/AppHeader.jsx'
 
+// Steps required for face registration.
 const FACE_DIRECTIONS = [
   { key: 'front', label: 'Front View', hint: 'Look straight to the camera. Face centered, neutral expression.' },
-  { key: 'left', label: 'Left Profile', hint: 'Turn your head ~45° to the left. Keep eyes visible.' },
-  { key: 'right', label: 'Right Profile', hint: 'Turn your head ~45° to the right. Keep eyes visible.' },
+  { key: 'left', label: 'Left Profile', hint: 'Turn your head ~45째 to the left. Keep eyes visible.' },
+  { key: 'right', label: 'Right Profile', hint: 'Turn your head ~45째 to the right. Keep eyes visible.' },
   { key: 'up', label: 'Upward Tilt', hint: 'Tilt your chin slightly up. Avoid strong shadows.' },
   { key: 'down', label: 'Downward Tilt', hint: 'Tilt your chin slightly down. Keep face inside guide.' },
 ]
@@ -15,11 +16,13 @@ const FACE_DIRECTIONS = [
 export default function FaceRegistrationPage() {
   const navigate = useNavigate()
 
+  // Form and step state.
   const [staffId, setStaffId] = useState('')
   const [fullName, setFullName] = useState('')
   const [activeIdx, setActiveIdx] = useState(0)
   const [tab, setTab] = useState('camera') // 'camera' | 'upload'
 
+  // Captured images for each direction.
   const [shots, setShots] = useState({
     front: '',
     left: '',
@@ -30,25 +33,30 @@ export default function FaceRegistrationPage() {
 
   const active = FACE_DIRECTIONS[activeIdx]
 
+  // Compute progress for the progress bar.
   const progress = useMemo(() => {
     const total = FACE_DIRECTIONS.length
     const done = FACE_DIRECTIONS.filter((d) => !!shots[d.key]).length
     return { total, done }
   }, [shots])
 
+  // Progress percentage for the bar width.
   const progressPct = useMemo(() => {
     if (!progress.total) return 0
     return Math.round((progress.done / progress.total) * 100)
   }, [progress.done, progress.total])
 
+  // Save the captured image into the active slot.
   const setActiveShot = (dataUrl) => {
     setShots((prev) => ({ ...prev, [active.key]: dataUrl }))
   }
 
+  // Clear the active slot image.
   const clearActiveShot = () => {
     setShots((prev) => ({ ...prev, [active.key]: '' }))
   }
 
+  // Reset all inputs and captured data.
   const resetAll = () => {
     setStaffId('')
     setFullName('')
@@ -57,12 +65,14 @@ export default function FaceRegistrationPage() {
     setShots({ front: '', left: '', right: '', up: '', down: '' })
   }
 
+  // Step navigation.
   const goPrev = () => setActiveIdx((i) => Math.max(0, i - 1))
   const goNext = () => setActiveIdx((i) => Math.min(FACE_DIRECTIONS.length - 1, i + 1))
 
   const isAllCaptured = progress.done === progress.total
   const canSubmit = staffId.trim().length > 0 && isAllCaptured
 
+  // Stub submit (prints payload to console).
   const submit = () => {
     const payload = {
       staffId: staffId.trim(),
@@ -74,6 +84,7 @@ export default function FaceRegistrationPage() {
     alert('Prepared payload. Check console.\nNext: connect to backend / store embeddings.')
   }
 
+  // Resolve step status for the left-side list.
   const stepStatus = (idx) => {
     const key = FACE_DIRECTIONS[idx].key
     if (idx === activeIdx) return 'active'
@@ -82,8 +93,9 @@ export default function FaceRegistrationPage() {
   }
 
   return (
+    // Page shell.
     <div className="bg-[--color-background-light] text-[--color-text-main] font-[--font-display] min-h-screen flex flex-col overflow-x-hidden">
-      {/* Header */}
+      {/* Header with back/reset actions. */}
       <AppHeader
         title="Face Registration"
         subtitle="Capture or upload 5 face directions for staff identification."
@@ -93,7 +105,7 @@ export default function FaceRegistrationPage() {
         onReset={resetAll}
       />
 
-      {/* Progress Bar */}
+      {/* Progress bar for multi-step capture. */}
       <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-6">
         <div className="w-full bg-white rounded-xl p-4 shadow-sm border border-slate-200">
           <div className="flex flex-col gap-3">
@@ -115,9 +127,9 @@ export default function FaceRegistrationPage() {
       </div>
 
       <div className="flex h-full grow flex-col max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6">
-        {/* Content */}
+        {/* Content layout: steps on the left, capture on the right. */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start h-full">
-          {/* Left: Steps */}
+          {/* Left: step list and navigation. */}
           <div className="lg:col-span-3 lg:sticky lg:top-6">
             <nav className="flex flex-col gap-4 bg-white rounded-xl p-5 shadow-sm border border-slate-200">
               <div className="flex flex-col gap-1 pb-2 border-b border-slate-100">
@@ -211,9 +223,9 @@ export default function FaceRegistrationPage() {
             </nav>
           </div>
 
-          {/* Right */}
+          {/* Right: staff info, capture UI, and submit panel. */}
           <div className="lg:col-span-9 flex flex-col gap-6">
-            {/* Staff Info */}
+            {/* Staff Info form fields. */}
             <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
               <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
                 <span className="material-symbols-outlined text-[color:var(--color-primary)]">badge</span>
@@ -249,9 +261,9 @@ export default function FaceRegistrationPage() {
               </div>
             </div>
 
-            {/* Capture Card */}
+            {/* Capture card with camera/upload tabs and preview. */}
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
-              {/* Tabs */}
+              {/* Input mode tabs. */}
               <div className="flex border-b border-slate-200 px-6 pt-2">
                 <button
                   type="button"
@@ -286,7 +298,7 @@ export default function FaceRegistrationPage() {
               </div>
 
               <div className="p-6 flex flex-col items-center gap-6">
-                {/* Saved preview */}
+                {/* Saved preview or live input. */}
                 {shots[active.key] ? (
                   <div className="w-full flex flex-col items-center gap-4">
                     <div className="relative w-full max-w-2xl aspect-video rounded-lg overflow-hidden bg-slate-900 shadow-inner">
@@ -317,7 +329,7 @@ export default function FaceRegistrationPage() {
                 ) : (
                   <div className="w-full flex flex-col items-center gap-4">
                     {tab === 'camera' ? (
-                      // ✅ 핵심: CameraInput을 프레임 안에 넣기 (relative + aspect-video)
+                      // Key: keep CameraInput inside the frame (relative + aspect-video)
                       <div className="relative w-full max-w-2xl aspect-video bg-slate-900 rounded-lg overflow-hidden shadow-inner">
                         <CameraInput onCapture={setActiveShot} />
                       </div>
@@ -329,13 +341,13 @@ export default function FaceRegistrationPage() {
                   </div>
                 )}
 
-                {/* Instructions */}
+                {/* Active step instructions. */}
                 <div className="text-center max-w-md">
                   <h4 className="text-slate-900 font-semibold mb-1">{active.label}</h4>
                   <p className="text-slate-500 text-sm">{active.hint}</p>
                 </div>
 
-                {/* Actions */}
+                {/* Actions for clearing or saving the current shot. */}
                 <div className="flex items-center gap-4 w-full justify-center pt-2 flex-wrap">
                   <button
                     type="button"
@@ -360,7 +372,7 @@ export default function FaceRegistrationPage() {
               </div>
             </div>
 
-            {/* Submit area */}
+            {/* Submit area and privacy notice. */}
             <div className="flex flex-col gap-4 mt-2">
               <div className="flex items-start gap-3 p-4 bg-blue-50 rounded-lg border border-blue-100 text-blue-900">
                 <span className="material-symbols-outlined text-[color:var(--color-primary)] mt-0.5">lock</span>
