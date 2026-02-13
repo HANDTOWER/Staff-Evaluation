@@ -1,0 +1,65 @@
+# ========================
+# Maven / Java build
+# ========================
+target/
+*.class
+
+# ========================
+# IDE / Editor
+# ========================
+.idea/
+.vscode/
+*.iml
+
+# ========================
+# OS
+# ========================
+.DS_Store
+Thumbs.db
+
+# ========================
+# Logs
+# ========================
+*.log
+
+# ========================
+# Environment / secrets
+# ========================
+.env
+*.env
+
+# ========================
+# Generated files
+# ========================
+*.jar
+*.war
+*.ear
+
+# ========================
+# Temporary files
+# ========================
+tmp/
+*.tmp
+*.swp
+*.bak
+
+# ========================
+# Node (nếu có frontend sau này)
+# ========================
+node_modules/
+
+# ========================
+# Ignore Maven Wrapper build
+# ========================
+.mvn/wrapper/maven-wrapper.jar
+
+# Local-only Spring profile config
+src/main/resources/application-local.properties
+
+# ========================
+# Google Credentials (SECURITY)
+# ========================
+**/service-account*.json
+**/credentials/*.json
+**/google-credentials.json
+credentials/

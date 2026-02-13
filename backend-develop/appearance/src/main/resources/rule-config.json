@@ -1,0 +1,24 @@
+{
+  "required": ["shirt", "pants", "shoes", "hat","tie"],
+  "score": {
+    "base": 100,
+    "penaltyPerViolation": 10,
+    "minScore": 60
+  },
+  "pose": {
+    "headGoodMax": 10.0,
+    "headWarnMax": 20.0,
+    "shoulderGoodMax": 3.0,
+    "shoulderWarnMax": 10.0,
+    "forwardHeadGoodMax": 2.2,
+    "forwardHeadWarnMax": 2.3,
+    "backGoodMax": 20.0,
+    "backWarnMax": 40.0,
+    "stabilityGoodMin": 80.0,
+    "stabilityWarnMin": 65.0,
+    "armWarnMin": 10.0,
+    "armBadMin": 30.0,
+    "legWarnMin": 60.0,
+    "legBadMin": 80.0
+  }
+}

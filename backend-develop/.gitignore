@@ -1,0 +1,4 @@
+.vscode/
+appearance/src/main/java/com/company/appearance/images/*.jpg
+appearance/src/main/java/com/company/appearance/images/*.png
+appearance/src/main/java/com/company/appearance/images/*.jpeg
