@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 
+// 1. 컴포넌트 선언부 추가
 export default function CameraInput({ onCapture, fullBody = false }) {
   // Keep refs to the video element and active media stream.
   const videoRef = useRef(null)
@@ -11,6 +12,7 @@ export default function CameraInput({ onCapture, fullBody = false }) {
   const [error, setError] = useState('')
   const [ready, setReady] = useState(false)
 
+  // 2. 'stop' 함수명 추가
   // Stop the camera and release the hardware.
   const stop = () => {
     const stream = streamRef.current
@@ -24,6 +26,7 @@ export default function CameraInput({ onCapture, fullBody = false }) {
     setReady(false)
   }
 
+  // 3. 'start' 함수명 추가
   const start = async () => {
     setError('')
     setStarting(true)
@@ -77,6 +80,7 @@ export default function CameraInput({ onCapture, fullBody = false }) {
     tryPlay()
   }, [enabled])
 
+  // 4. 'capture' 함수명 추가
   // Capture current frame (fullBody => crop to 9:16).
   const capture = () => {
     const video = videoRef.current
